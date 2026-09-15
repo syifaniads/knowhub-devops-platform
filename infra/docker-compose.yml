@@ -1,0 +1,67 @@
+services:
+  frontend:
+    build: ../frontend
+    ports:
+      - "8081:80"
+    depends_on:
+      - backend
+    networks: [knowhub]
+
+  backend:
+    build: ../backend
+    environment:
+      PORT: 8080
+      DATABASE_URL: ${DATABASE_URL:-postgresql://knowhub:change-me-local@postgres:5432/knowhub?schema=public}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [knowhub]
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-knowhub}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-local}
+      POSTGRES_DB: ${POSTGRES_DB:-knowhub}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [knowhub]
+
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    networks: [knowhub]
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    command: ["--config.file=/etc/prometheus/prometheus.yml"]
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    networks: [knowhub]
+
+  grafana:
+    image: grafana/grafana:11.2.2
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-change-me-local}
+    volumes:
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    networks: [knowhub]
+
+networks:
+  knowhub:
+    driver: bridge
+
+volumes:
+  pgdata:
+  grafana_data:

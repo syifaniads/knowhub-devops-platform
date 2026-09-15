@@ -1,120 +1,124 @@
-# KnowHub DevOps Platform — CI/CD, Containers & Docker Swarm
+# KnowHub DevOps Platform
 
-> Evidence-based portfolio case study for containerization, GitHub Actions, GHCR, Docker Swarm, secrets/config management, PostgreSQL persistence, and Prometheus/Grafana observability.
+> A self-contained DevOps portfolio monorepo covering the application, containerization, CI/CD, Docker Swarm orchestration, runtime secrets, persistence, and observability.
 
 **Program:** Final Project DevOps — POROS FILKOM UB  
 **Team:** Syifani Adillah Salsabila · Khaelano Abroor Maulana · Muhammad Gathan Raka  
 **Portfolio owner:** **Syifani Adillah Salsabila — DevOps Contributor / Frontend & Containerization**  
-**Application:** KnowHub community/Q&A web application  
-**Original implementation period:** 2025
+**Original implementation:** March 2025
 
 ![Docker](https://img.shields.io/badge/Docker-Containers-2496ED?logo=docker&logoColor=white)
 ![Swarm](https://img.shields.io/badge/Docker%20Swarm-1%20Manager%20%2B%202%20Workers-2496ED)
 ![Actions](https://img.shields.io/badge/GitHub%20Actions-CI%2FCD-2088FF?logo=githubactions&logoColor=white)
-![GHCR](https://img.shields.io/badge/GHCR-Container%20Registry-181717?logo=github)
+![GHCR](https://img.shields.io/badge/GHCR-Registry-181717?logo=github)
 ![Prometheus](https://img.shields.io/badge/Prometheus-Monitoring-E6522C?logo=prometheus&logoColor=white)
 ![Grafana](https://img.shields.io/badge/Grafana-Dashboards-F46800?logo=grafana&logoColor=white)
 
-## Why this repository exists
+## What is in this repository?
 
-The original project is spread across a personal development repository and the team organization. This repository is now the **canonical personal portfolio view**: it keeps the frontend development history, explains the final team architecture, links the original source repositories, and separates historical implementation from later hardening recommendations.
+This repository is the **canonical personal portfolio copy** of the KnowHub final project. It now contains the application and delivery stack together, so a reviewer does not need to jump between the historical frontend, backend, and infrastructure repositories.
 
-The final team project required a web application to be containerized and delivered through **GitHub Actions → GHCR → Docker Swarm**, using at least **1 manager + 2 worker nodes**, custom overlay networking, persistent volumes, Docker Config/Secret, and Prometheus/Grafana monitoring.
+```text
+.
+├── frontend/                  React UI + Nginx image
+├── backend/                   Express + TypeScript + Prisma API
+├── infra/
+│   ├── docker-compose.yml     local multi-container stack
+│   ├── docker-stack.yml       Docker Swarm deployment
+│   ├── prometheus/            monitoring configuration
+│   ├── secrets/               secret bootstrap documentation
+│   └── swarm/                 cluster/deployment runbook
+├── .github/workflows/         current canonical CI/CD
+├── workflows/historical/      original 2025 workflows, retained as evidence
+└── docs/                      provenance, hardening, and technical debt
+```
 
-## Final system view
+## System architecture
 
 ```mermaid
 flowchart LR
-    DEV[Developers] --> GH[GitHub repositories]
-    GH --> GA[GitHub Actions\nbuild + publish]
-    GA --> REG[GHCR]
+    DEV[Developer] --> GH[GitHub]
+    GH --> CI[GitHub Actions]
+    CI --> REG[GHCR]
 
-    REG --> M[Swarm Manager\ncontrol plane only]
+    REG --> M[Swarm Manager\ncontrol plane / drain]
     M --> W1[Worker 1]
     M --> W2[Worker 2]
 
-    subgraph DATA[Workloads on worker nodes]
-      FE[Frontend\nReact + Nginx]
-      API[Backend API\nNode.js]
-      DB[(PostgreSQL\npersistent volume)]
+    subgraph APP[Worker workloads]
+      FE[React + Nginx]
+      API[Express API\n3 replicas]
+      DB[(PostgreSQL)]
       NE[Node Exporter]
       PROM[Prometheus]
       GRAF[Grafana]
     end
 
-    W1 --> DATA
-    W2 --> DATA
-    FE --> API --> DB
+    W1 --> APP
+    W2 --> APP
+    FE -->|/api| API --> DB
     NE --> PROM --> GRAF
-    SEC[Docker Secrets / Configs] -. runtime injection .-> API
+    SEC[Docker Secrets] -. runtime injection .-> API
     SEC -. credentials .-> DB
 ```
 
-> The diagram is a portfolio-level consolidation of the retained final-project artifacts. It does not imply that every service was highly available or production-grade.
+## Application path
 
-## Verified project capabilities
+The retained application is a small community/Q&A CRUD system. The frontend calls `/api/posts`; Nginx proxies that path to the backend. The backend exposes health and post CRUD endpoints and persists posts through Prisma/PostgreSQL.
 
-| Area | Evidence retained | Status |
+| Component | Technology | Purpose |
 |---|---|---|
-| Frontend containerization | Multi-stage Node build → Nginx runtime | **Verified** |
-| Backend containerization | Multi-stage Node build, Prisma artifacts, runtime entrypoint | **Verified** |
-| GitHub Actions | Frontend and backend image-build/publish workflows | **Verified** |
-| Container registry | GHCR used as the target registry | **Verified** |
-| Docker Swarm | 1 manager + 2 workers shown in project evidence | **Verified** |
-| Worker-only application placement | Project requirement explicitly prohibited manager workloads | **Verified requirement / documented deployment intent** |
-| Custom overlay network | `internal-net` / non-default overlay network | **Verified** |
-| Persistent state | PostgreSQL volume and Grafana volume | **Verified** |
-| Secret handling | External Docker Secrets for database credentials / URL | **Verified** |
-| Monitoring | Prometheus + Node Exporter + Grafana | **Verified** |
-| Backend scale-out | Application service configured with 3 replicas in retained final config | **Verified configuration** |
-| Firebase hosting | Earlier frontend CI/CD path preserved in personal history | **Verified earlier iteration** |
+| Frontend | React, Nginx | UI and reverse proxy |
+| Backend | Node.js, Express, TypeScript | REST API |
+| Data | Prisma, PostgreSQL | persistence |
+| Build | Docker multi-stage images | reproducible packaging |
+| Registry | GHCR | image publication |
+| Orchestration | Docker Swarm | multi-node deployment |
+| Secrets | Docker Secrets | database runtime credentials |
+| Network | custom overlay | service communication |
+| Monitoring | Node Exporter, Prometheus, Grafana | host metrics and dashboards |
 
-## My verifiable contribution
+## Verified historical evidence
 
-This was a collaborative team project, not a solo build. My GitHub history provides direct evidence of hands-on contribution to the frontend/DevOps track. In particular, commit `b35193d442a7f5dbd8b0a3c402213ce1f1ee24ed` in this repository is authored by `syifaniads` and introduced Docker configuration, a security-scanning setup, environment handling, and dependency changes. The repository also preserves my earlier branch/PR and Firebase CI/CD work.
+The final report documents Dockerfiles for frontend/backend, GitHub Actions image publication, a 1-manager/2-worker Swarm, Docker Secrets/Config, a custom overlay network, persistent volumes, and Prometheus/Grafana monitoring. The original team repositories remain linked in [SOURCE_EVIDENCE.md](SOURCE_EVIDENCE.md).
 
-The final frontend history was later carried into the team organization. Multiple commits are shared by SHA between the personal repositories and `Final-Project-DevOps/devops-platform-frontend`, which gives the project a traceable provenance rather than a rewritten portfolio-only story.
+My direct Git history also includes commit `b35193d442a7f5dbd8b0a3c402213ce1f1ee24ed`, authored by `syifaniads`, which introduced Docker/security/environment work in the personal development lineage. See [CONTRIBUTIONS.md](CONTRIBUTIONS.md).
 
-See [CONTRIBUTIONS.md](CONTRIBUTIONS.md) and [SOURCE_EVIDENCE.md](SOURCE_EVIDENCE.md).
+## Historical vs canonical files
 
-## Important engineering cleanup
+The files under `workflows/historical/` preserve the original 2025 workflow shape for provenance. The active files in `.github/workflows/` are cleaned monorepo equivalents. Likewise, `infra/docker-stack.yml` keeps the original Swarm intent while removing hard-coded environment-specific values.
 
-The historical project worked as coursework, but several artifacts were not ideal as a senior-reviewable reference. This portfolio therefore documents the gaps instead of hiding them:
+This distinction matters: the portfolio does **not** silently rewrite history and then claim the improved version was the exact 2025 submission.
 
-- the historical frontend GHCR workflow had an image-name composition issue (`ghcr.io` appeared in both registry and image name);
-- branch naming evolved (`main-clean`, `main`, `master`) across repositories;
-- the personal `docker-compose.yml` referenced an `api/` directory that is not present on the current default branch;
-- the original Swarm example used environment-variable defaults for database credentials, while the final report moved toward Docker Secrets;
-- monitoring was infrastructure-level and did not include a mature alerting/SLO stack;
-- PostgreSQL used a single stateful instance, so the application tier could scale while the database remained a single point of failure.
+## Run locally
 
-Corrected **portfolio reference configurations** are provided under [`infra/`](infra/) and [`examples/ci/`](examples/ci/). These examples are clearly separated from historical evidence.
+```bash
+cp .env.example .env
+docker compose -f infra/docker-compose.yml up --build
+```
 
-## Repository map
+Then open:
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) — deployment/control/data-plane architecture
-- [CI_CD.md](CI_CD.md) — original pipeline and corrected reference workflow
-- [DOCKER_SWARM.md](DOCKER_SWARM.md) — cluster, placement, networking, updates and persistence
-- [OBSERVABILITY.md](OBSERVABILITY.md) — Prometheus, Node Exporter and Grafana
-- [CONTRIBUTIONS.md](CONTRIBUTIONS.md) — team attribution and my direct evidence
-- [SOURCE_EVIDENCE.md](SOURCE_EVIDENCE.md) — original repos, commit lineage and report mapping
-- [SECURITY.md](SECURITY.md) — secret handling and public-repository policy
-- [RUNBOOK.md](RUNBOOK.md) — reproducible deployment/runbook outline
-- [LIMITATIONS.md](LIMITATIONS.md) — evidence and architecture limitations
-- [PORTFOLIO.md](PORTFOLIO.md) — CV/website-ready project copy
-- [docs/REPOSITORY_PROVENANCE.md](docs/REPOSITORY_PROVENANCE.md) — why multiple repos existed
-- [docs/PRODUCTION_HARDENING.md](docs/PRODUCTION_HARDENING.md) — what I would change for production
+- application: `http://localhost:8081`
+- backend health: `http://localhost:8080/health`
+- Prometheus: `http://localhost:9090`
+- Grafana: `http://localhost:3000`
 
-## Original team source
+## Deploy to Docker Swarm
 
-The final team implementation is preserved in the `Final-Project-DevOps` organization:
+Read [infra/swarm/DEPLOYMENT.md](infra/swarm/DEPLOYMENT.md). The portfolio stack intentionally keeps the manager in `drain`, schedules workload services on workers, uses an explicit overlay network, and expects external Docker Secrets.
 
-- Frontend: https://github.com/Final-Project-DevOps/devops-platform-frontend
-- Backend: https://github.com/Final-Project-DevOps/devops-platform-backend
-- Infrastructure consolidation: https://github.com/Final-Project-DevOps/infrastructure
+## Engineering caveats
 
-The older personal repository `syifaniads/tes` is a duplicate/mirror lineage of the same frontend work and is **not** the canonical portfolio repository anymore.
+This was a learning/recruitment project, not a production platform. PostgreSQL is a single stateful replica, the historical login/register demo used client-side local storage, and the original pipelines did not implement every production-grade security gate. See [LIMITATIONS.md](LIMITATIONS.md) and [docs/PRODUCTION_HARDENING.md](docs/PRODUCTION_HARDENING.md).
 
-## Public repository policy
+## Source provenance
 
-No real GHCR tokens, Firebase tokens, database passwords, `.env` files, private keys, or historical deployment credentials should be committed here. Examples use placeholders or Docker Secrets. The original PDF report is not republished because portfolio evidence is better represented by source history and sanitized documentation.
+Original project sources are preserved at:
+
+- `Final-Project-DevOps/devops-platform-frontend`
+- `Final-Project-DevOps/devops-platform-backend`
+- `Final-Project-DevOps/infrastructure` (later consolidated infrastructure documentation)
+- `syifaniads/react-firebase-devops` historical branches and commits
+
+This repository is a curated consolidation of collaborative work. It does not claim sole authorship of team-level backend, Swarm, monitoring, or infrastructure work.

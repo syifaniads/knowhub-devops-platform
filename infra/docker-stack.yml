@@ -1,0 +1,94 @@
+version: "3.9"
+
+services:
+  frontend:
+    image: ${FRONTEND_IMAGE:-ghcr.io/syifaniads/react-firebase-devops/frontend:main}
+    ports:
+      - "80:80"
+    networks: [internal-net]
+    deploy:
+      replicas: 2
+      placement:
+        constraints: [node.role == worker]
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+
+  backend:
+    image: ${BACKEND_IMAGE:-ghcr.io/syifaniads/react-firebase-devops/backend:main}
+    entrypoint: ["/bin/sh", "-c", "export DATABASE_URL=$$(cat /run/secrets/db_url) && ./entrypoint.sh"]
+    networks: [internal-net]
+    secrets: [db_url]
+    deploy:
+      replicas: 3
+      placement:
+        constraints: [node.role == worker]
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER_FILE: /run/secrets/postgres_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_DB: knowhub
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [internal-net]
+    secrets: [postgres_user, postgres_password]
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == worker]
+
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    networks: [internal-net]
+    deploy:
+      mode: global
+      placement:
+        constraints: [node.role == worker]
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    configs:
+      - source: prometheus_config
+        target: /etc/prometheus/prometheus.yml
+    networks: [internal-net]
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == worker]
+
+  grafana:
+    image: grafana/grafana:11.2.2
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks: [internal-net]
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == worker]
+
+configs:
+  prometheus_config:
+    file: ./prometheus/prometheus.yml
+
+secrets:
+  postgres_user:
+    external: true
+  postgres_password:
+    external: true
+  db_url:
+    external: true
+
+networks:
+  internal-net:
+    driver: overlay
+
+volumes:
+  pgdata:
+  grafana_data:
