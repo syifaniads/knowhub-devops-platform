@@ -1,8 +1,11 @@
-# Portfolio Infrastructure Reference
+# Infrastructure
 
-These files are **cleaned reference configurations** derived from the retained project architecture. They are not presented as byte-for-byte copies of the historical deployment.
+This directory is the runnable infrastructure layer for the canonical KnowHub monorepo.
 
-- `docker-stack.portfolio.yml` — Swarm topology with worker placement, external secrets, custom overlay network, persistence, Prometheus/Grafana and Node Exporter.
-- `prometheus.yml` — minimal Node Exporter scrape configuration.
+- `docker-compose.yml` — local build/run path for frontend, backend, PostgreSQL, Prometheus, Grafana, and Node Exporter.
+- `docker-stack.yml` — Swarm deployment aligned with the final-project requirement.
+- `prometheus/prometheus.yml` — retained 15-second Node Exporter scrape configuration.
+- `secrets/README.md` — external Docker Secret bootstrap without committing values.
+- `swarm/DEPLOYMENT.md` — 1-manager/2-worker setup and validation steps.
 
-Use immutable image tags and create Docker Secrets before deployment.
+Historical configuration is preserved under `../workflows/historical/` and source provenance is documented in `../SOURCE_EVIDENCE.md`.

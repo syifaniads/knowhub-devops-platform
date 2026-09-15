@@ -1,72 +1,63 @@
 # Architecture
 
-## Scope
+## Repository architecture
 
-KnowHub was a small CRUD-oriented web application used as the workload for a DevOps delivery exercise. The engineering focus was the path from source control to container registry, Swarm deployment, runtime configuration, persistence, and infrastructure monitoring.
+The canonical portfolio is organized as one monorepo even though the 2025 implementation was historically split across frontend and backend repositories.
 
-## Deployment architecture
+```text
+frontend/  -> React UI + Nginx reverse proxy
+backend/   -> Express + TypeScript + Prisma CRUD API
+infra/     -> local Compose + Docker Swarm + monitoring + secrets
+.github/   -> active monorepo CI/CD
+workflows/historical/ -> original pipeline evidence
+```
+
+## Runtime architecture
 
 ```mermaid
 flowchart TB
-  subgraph SCM[Source control]
-    FERepo[Frontend repository]
-    BERepo[Backend repository]
+  U[Browser] --> FE[React + Nginx]
+  FE -->|/api| API[Express API\n3 Swarm replicas]
+  API --> DB[(PostgreSQL)]
+
+  subgraph DELIVERY[Delivery path]
+    GH[GitHub monorepo] --> CI[GitHub Actions]
+    CI --> GHCR[GHCR]
   end
 
-  FERepo --> FECI[GitHub Actions]
-  BERepo --> BECI[GitHub Actions]
-  FECI --> GHCR[GitHub Container Registry]
-  BECI --> GHCR
+  GHCR --> SW[Docker Swarm]
+  SW --> FE
+  SW --> API
+  SW --> DB
 
-  subgraph Swarm[Docker Swarm]
-    M[Manager\ncontrol plane]
-    W1[Worker 1]
-    W2[Worker 2]
-    M --> W1
-    M --> W2
-
-    FE[Frontend service]
-    API[Backend service]
-    DB[(PostgreSQL)]
-    NODE[Node Exporter]
-    PROM[Prometheus]
-    GRAF[Grafana]
-  end
-
-  GHCR --> FE
-  GHCR --> API
-  W1 --> FE
-  W1 --> API
-  W1 --> NODE
-  W2 --> FE
-  W2 --> API
-  W2 --> NODE
-  FE --> API
-  API --> DB
-  NODE --> PROM --> GRAF
+  NE[Node Exporter] --> PROM[Prometheus] --> GRAF[Grafana]
+  SEC[Docker Secrets] -. db_url .-> API
+  SEC -. db credentials .-> DB
 ```
 
-## Control plane vs data plane
+## Swarm topology
 
-The manager is responsible for Swarm orchestration and scheduling. The project requirement stated that the manager should not execute application tasks. A production-style stack therefore applies `node.role == worker` placement constraints to workload services.
+The assessed lab requirement was **1 manager + 2 workers**. The manager is control-plane only; the canonical stack places workloads on `node.role == worker` and the runbook also recommends manager `drain`.
 
 ## Networking
 
-A named custom overlay network is used instead of relying on the implicit default network. This provides a clearer service boundary and predictable service discovery. Public ingress should expose only the minimum required ports; PostgreSQL should stay internal.
+- local development: explicit bridge network `knowhub`
+- Swarm: explicit overlay network `internal-net`
+- frontend exposes HTTP; Nginx proxies `/api/*` to the backend service
+- PostgreSQL remains internal to the service network
+
+The coursework asked for a non-default overlay network, so the canonical stack makes the network explicit instead of relying on an automatically generated default network.
 
 ## State
 
-- PostgreSQL requires persistent storage.
-- Grafana optionally uses a persistent data volume.
-- Application containers should remain stateless so replicas can be replaced safely.
+PostgreSQL uses a named volume and Grafana has a persistent data volume. Application containers are otherwise disposable. A local Docker volume on a Swarm worker is node-scoped, so this gives persistence on that node but **not database high availability**.
 
-Swarm local volumes are node-scoped. This means a single PostgreSQL service backed by a local volume is **persistent but not highly available**.
+## Runtime configuration
 
-## Configuration and secrets
+- Prometheus configuration is non-sensitive and shipped as Docker Config in the Swarm stack.
+- PostgreSQL username/password and `DATABASE_URL` are expected as external Docker Secrets.
+- No real `.env`, token, Swarm join token, or credential is committed.
 
-Runtime configuration is split conceptually into:
+## Application boundary
 
-- **Config** — non-sensitive Prometheus configuration and other static runtime configuration.
-- **Secret** — database username/password, connection URL, tokens, and credentials.
-
-Secrets should be mounted through `/run/secrets/...` rather than embedded in YAML or committed `.env` files.
+The active backend implements health and post CRUD endpoints. Historical login/register behavior in the frontend is a demo convenience, not a production identity architecture; see `docs/TECHNICAL_DEBT.md`.
