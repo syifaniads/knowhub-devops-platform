@@ -1,424 +1,120 @@
-# React Firebase DevOps Project
-
-## Deskripsi Proyek
-
-Proyek ini adalah implementasi Continuous Integration/Continuous Deployment (CI/CD) menggunakan GitHub Actions dan Firebase Hosting untuk aplikasi React. Tujuan utama dari proyek ini adalah untuk memahami proses automasi deployment dengan menggunakan GitHub Actions dan Firebase, serta cara pengelolaan versi dengan Git.
-
-## Proses Pengerjaan
-
-### 1. Inisialisasi Repository GitHub
-
-- Membuat repository GitHub baru dengan nama `react-firebase-devops`.
-- Clone repository ke lokal dan membuat branch baru `dev` untuk pengembangan.
-- Commit pertama berisi setup awal proyek.
-
-git clone https://github.com/syifaniads/react-firebase-devops.git
-cd react-firebase-devops
-git checkout -b dev
-git add .
-git commit -m "Initial setup"
-git push origin dev
-
-### 2. Pengembangan Aplikasi React
-
-- Menggunakan `create-react-app` untuk memulai aplikasi React.
-- Menambahkan komponen Navbar pada `src/App.js`.
-- Membuat branch baru `feature-navbar`, lalu commit dan push perubahan tersebut.
-- Membuka Pull Request (PR) dari `feature-navbar` ke `dev` dan melakukan merge.
-
-npx create-react-app .
-
-import React, { useState } from 'react';
-import { Edit, Trash2, MessageSquare, Heart, Plus, User } from 'lucide-react';
-export default function KnowHub() {
-const [showForm, setShowForm] = useState(false);
-const [formData, setFormData] = useState({
-question: '',
-content: '',
-tags: ''
-});
-const [posts, setPosts] = useState([
-{
-id: '1',
-question: 'Apa framework JavaScript terbaik untuk pengembangan web modern?',
-content: 'Saya sedang mempertimbangkan beberapa opsi untuk proyek baru saya dan ingin tahu pendapat komunitas tentang React, Vue, dan Angular.',
-author: 'Budi Santoso',
-timestamp: '1 jam yang lalu',
-likes: 24,
-answers: 8,
-tags: ['JavaScript', 'Web Development', 'Framework']
-},
-{
-id: '2',
-question: 'Bagaimana cara meningkatkan performa website?',
-content: 'Website saya lambat saat loading. Apa saja langkah-langkah untuk mengoptimalkan performa website?',
-author: 'Siti Aminah',
-timestamp: '3 jam yang lalu',
-likes: 15,
-answers: 5,
-tags: ['Performance', 'Web Development', 'Optimization']
-}
-]);
-const handleInputChange = (e) => {
-const { name, value } = e.target;
-setFormData({
-...formData,
-[name]: value
-});
-};
-const handleSubmit = (e) => {
-e.preventDefault();
-if (!formData.question.trim()) {
-alert('Pertanyaan tidak boleh kosong!');
-return;
-}
-const newPost = {
-id: Date.now().toString(),
-question: formData.question,
-content: formData.content,
-author: 'Anonim', // Bisa ganti dengan nama user login
-timestamp: 'Baru saja',
-likes: 0,
-answers: 0,
-tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag !== '')
-};
-setPosts([newPost, ...posts]);
-setFormData({ question: '', content: '', tags: '' });
-setShowForm(false);
-};
-const toggleForm = () => {
-setShowForm(!showForm);
-};
-const handleLike = (id) => {
-setPosts(posts.map(post =>
-post.id === id ? { ...post, likes: post.likes + 1 } : post
-));
-};
-const handleDelete = (id) => {
-if (window.confirm('Hapus pertanyaan ini?')) {
-setPosts(posts.filter(post => post.id !== id));
-}
-};
-return (
-<div className="min-h-screen bg-white">
-{/* Header */}
-<header className="bg-green-500 text-white py-3 px-4 w-full fixed top-0 left-0 z-10 shadow-lg">
-<div className="flex justify-between items-center max-w-screen-xl mx-auto">
-<h1 className="text-xl md:text-2xl font-bold">KnowHub</h1>
-<div className="flex items-center space-x-2">
-<button 
-onClick={toggleForm}
-className="bg-white text-green-500 rounded-full px-2 py-1 md:px-3 md:py-1 flex items-center font-medium text-xs md:text-sm"
->
-<Plus size={16} className="mr-1" /> <span className="hidden sm:inline">Tambah Pertanyaan</span><span className="sm:hidden">Tambah</span>
-</button>
-<button className="bg-transparent text-white p-1 rounded-full">
-<User size={20} />
-</button>
-</div>
-</div>
-</header>
-<main className="container mx-auto px-4 py-4 max-w-4xl pt-16"> {/* Extra padding-top to avoid overlap with fixed navbar */}
-{/* Tombol buat pertanyaan */}
-{!showForm && (
-<button 
-onClick={toggleForm}
-className="bg-green-500 text-white px-4 py-2 rounded-md mb-6 hover:bg-green-600 transition-colors w-full sm:w-auto"
->
-Buat Pertanyaan Baru
-</button>
-)}
-{/* Form buat pertanyaan */}
-{showForm && (
-<div className="mb-6 border rounded-lg p-4 shadow-sm">
-<div className="flex justify-between items-center mb-4">
-<h2 className="text-lg md:text-xl font-medium text-gray-800">Buat Pertanyaan Baru</h2>
-<button 
-onClick={toggleForm}
-className="bg-gray-200 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-300 transition-colors text-sm"
->
-Batal
-</button>
-</div>
-<form onSubmit={handleSubmit}>
-<div className="mb-4">
-<label className="block text-gray-700 mb-2 font-medium">Pertanyaan</label>
-<input
-type="text"
-name="question"
-value={formData.question}
-onChange={handleInputChange}
-placeholder="Masukkan pertanyaan Anda di sini..."
-className="w-full px-4 py-2 border border-green-200 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500 text-gray-800"
-/>
-</div>
-<div className="mb-4">
-<label className="block text-gray-700 mb-2 font-medium">Detail (opsional)</label>
-<textarea
-name="content"
-value={formData.content}
-onChange={handleInputChange}
-placeholder="Tambahkan detail untuk pertanyaan Anda..."
-className="w-full px-4 py-2 border border-green-200 rounded-md h-24 md:h-32 focus:outline-none focus:ring-1 focus:ring-green-500 text-gray-800"
-/>
-</div>
-<div className="mb-6">
-<label className="block text-gray-700 mb-2 font-medium">Tag (pisahkan dengan koma)</label>
-<input
-type="text"
-name="tags"
-value={formData.tags}
-onChange={handleInputChange}
-placeholder="contoh: web, javascript, react"
-className="w-full px-4 py-2 border border-green-200 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500 text-gray-800"
-/>
-</div>
-<div className="flex justify-end">
-<button
-type="submit"
-className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors w-full sm:w-auto"
->
-Publikasikan
-</button>
-</div>
-</form>
-</div>
-)}
-{/* Daftar pertanyaan */}
-<div className="space-y-6">
-{posts.map(post => (
-<div key={post.id} className="border rounded-lg p-4 shadow-sm mb-4 last:mb-0">
-<div className="flex justify-between items-start">
-<h3 className="text-base md:text-lg font-medium text-green-700 mb-1">{post.question}</h3>
-<div className="flex space-x-1">
-<button 
-onClick={() => alert('Fitur edit belum tersedia')} 
-className="text-green-500 hover:text-green-700"
->
-<Edit size={16} />
-</button>
-<button 
-onClick={() => handleDelete(post.id)} 
-className="text-red-500 hover:text-red-700"
->
-<Trash2 size={16} />
-</button>
-</div>
-</div>
-<div className="text-xs md:text-sm text-gray-500 mb-2">
-<span className="text-green-600 font-medium">{post.author}</span> • {post.timestamp}
-</div>
-<p className="text-sm md:text-base text-gray-700 mb-3">{post.content}</p>
-<div className="flex flex-wrap gap-2 mb-3">
-{post.tags.map((tag, index) => (
-<span 
-key={index} 
-className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs"
->
-{tag}
-</span>
-))}
-</div>
-<div className="flex items-center space-x-4">
-<button 
-onClick={() => handleLike(post.id)}
-className="flex items-center text-gray-500 hover:text-green-600 text-xs md:text-sm"
->
-<Heart size={14} className="mr-1" />
-<span>{post.likes}</span>
-</button>
-<button className="flex items-center text-gray-500 hover:text-green-600 text-xs md:text-sm">
-<MessageSquare size={14} className="mr-1" />
-<span>{post.answers} Jawaban</span>
-</button>
-</div>
-</div>
-))}
-</div>
-</main>
-</div>
-);
-}
-
-git checkout -b feature-navbar
-git add .
-git commit -m "Add Navbar component"
-git push origin feature-navbar
-
-### 3. Manajemen Branch dan Merge Conflict
-
-- Membuat branch baru `feature-footer` dan menambahkan komponen Footer.
-- Melakukan modifikasi struktur Navbar di branch `dev` dan commit perubahan.
-- Membuka PR dari `feature-footer` ke `dev` dan menyelesaikan merge conflict.
-
-export default function Footer() {
-return (
-<footer className="bg-green-500 text-white py-8 text-center text-sm fixed bottom-0 w-full">
-<div className="mb-4">
-<p>© {new Date().getFullYear()} KnowHub. Semua Hak & Pengetahuan Dilindungi.</p>
-</div>
-<div className="flex justify-center space-x-6 mb-4">
-<a href="https://www.instagram.com/yourprofile" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-300">
-<i className="fab fa-instagram"></i> Instagram
-</a>
-<a href="https://www.facebook.com/yourprofile" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-300">
-<i className="fab fa-facebook"></i> Facebook
-</a>
-<a href="https://twitter.com/yourprofile" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-300">
-<i className="fab fa-twitter"></i> Twitter
-</a>
-<a href="https://www.linkedin.com/in/yourprofile" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-300">
-<i className="fab fa-linkedin"></i> LinkedIn
-</a>
-</div>
-<div className="text-sm">
-<a href="/about" className="hover:text-emerald-300 mx-2">Tentang Kami</a>
-<a href="/contact" className="hover:text-emerald-300 mx-2">Kontak</a>
-<a href="/privacy-policy" className="hover:text-emerald-300 mx-2">Kebijakan Privasi</a>
-<a href="/terms-of-service" className="hover:text-emerald-300 mx-2">Syarat & Ketentuan</a>
-</div>
-</footer>
-);
-}
-
-git checkout -b feature-footer
-git add .
-git commit -m "Add Footer component"
-git push origin feature-footer
-
-### 4. Konfigurasi CI/CD dengan GitHub Actions
-
-- Membuat folder `.github/workflows` dan menambahkan file `firebase-deploy.yml` untuk konfigurasi CI/CD.
-- Menambahkan langkah-langkah dalam workflow untuk:
-  - Checkout repository
-  - Install dependencies & build aplikasi
-  - Deploy ke Firebase Hosting
-
-  name: Firebase Deploy
-on:
-push:
-branches:
-- main-clean # Workflow only runs when pushing to the 'main' branch
-jobs:
-build:
-runs-on: ubuntu-latest # Uses the latest Ubuntu environment
-steps:
-- name: Checkout code
-uses: actions/checkout@v3 # Checkout code from repository
-- name: Set up Node.js
-uses: actions/setup-node@v3
-with:
-node-version: '18' # Using Node.js version 18
-- name: Install dependencies
-run: |
-npm install
-- name: Build the project
-run: |
-npm run build
-- name: Install Firebase CLI
-run: |
-npm install -g firebase-tools
-- name: Deploy to Firebase Hosting
-run: |
-firebase deploy --only hosting --non-interactive --token ${{ secrets.FIREBASE_TOKEN }} --project fir-react-devops
-
-### 5. Deployment ke Firebase Hosting
-
-- Menginstall dan login ke Firebase CLI.
-- Mengkonfigurasi Firebase Hosting di aplikasi React.
-- Mengambil Firebase CI Token dan menambahkannya sebagai GitHub Secret.
-- Melakukan push ke branch `main` dan memantau hasil deployment di GitHub Actions.
-
-firebase login
-firebase init hosting
-firebase ci:token
-
-## URL Aplikasi
-
-Aplikasi dapat diakses melalui [Firebase Hosting](https://fir-react-devops.web.app/).
-
-## URL Repository
-
-Repository GitHub proyek ini dapat diakses di [https://github.com/syifaniads/react-firebase-devops](https://github.com/syifaniads/react-firebase-devops).
-
-## Instalasi
-
-Untuk menjalankan aplikasi ini secara lokal, ikuti langkah-langkah berikut:
-
-1. Clone repository ini:
-
-   ```bash
-   git clone https://github.com/syifaniads/react-firebase-devops.git
-
-
-
-<!-- # Getting Started with Create React App
-
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
-
-## Available Scripts
-
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify) -->
+# KnowHub DevOps Platform — CI/CD, Containers & Docker Swarm
+
+> Evidence-based portfolio case study for containerization, GitHub Actions, GHCR, Docker Swarm, secrets/config management, PostgreSQL persistence, and Prometheus/Grafana observability.
+
+**Program:** Final Project DevOps — POROS FILKOM UB  
+**Team:** Syifani Adillah Salsabila · Khaelano Abroor Maulana · Muhammad Gathan Raka  
+**Portfolio owner:** **Syifani Adillah Salsabila — DevOps Contributor / Frontend & Containerization**  
+**Application:** KnowHub community/Q&A web application  
+**Original implementation period:** 2025
+
+![Docker](https://img.shields.io/badge/Docker-Containers-2496ED?logo=docker&logoColor=white)
+![Swarm](https://img.shields.io/badge/Docker%20Swarm-1%20Manager%20%2B%202%20Workers-2496ED)
+![Actions](https://img.shields.io/badge/GitHub%20Actions-CI%2FCD-2088FF?logo=githubactions&logoColor=white)
+![GHCR](https://img.shields.io/badge/GHCR-Container%20Registry-181717?logo=github)
+![Prometheus](https://img.shields.io/badge/Prometheus-Monitoring-E6522C?logo=prometheus&logoColor=white)
+![Grafana](https://img.shields.io/badge/Grafana-Dashboards-F46800?logo=grafana&logoColor=white)
+
+## Why this repository exists
+
+The original project is spread across a personal development repository and the team organization. This repository is now the **canonical personal portfolio view**: it keeps the frontend development history, explains the final team architecture, links the original source repositories, and separates historical implementation from later hardening recommendations.
+
+The final team project required a web application to be containerized and delivered through **GitHub Actions → GHCR → Docker Swarm**, using at least **1 manager + 2 worker nodes**, custom overlay networking, persistent volumes, Docker Config/Secret, and Prometheus/Grafana monitoring.
+
+## Final system view
+
+```mermaid
+flowchart LR
+    DEV[Developers] --> GH[GitHub repositories]
+    GH --> GA[GitHub Actions\nbuild + publish]
+    GA --> REG[GHCR]
+
+    REG --> M[Swarm Manager\ncontrol plane only]
+    M --> W1[Worker 1]
+    M --> W2[Worker 2]
+
+    subgraph DATA[Workloads on worker nodes]
+      FE[Frontend\nReact + Nginx]
+      API[Backend API\nNode.js]
+      DB[(PostgreSQL\npersistent volume)]
+      NE[Node Exporter]
+      PROM[Prometheus]
+      GRAF[Grafana]
+    end
+
+    W1 --> DATA
+    W2 --> DATA
+    FE --> API --> DB
+    NE --> PROM --> GRAF
+    SEC[Docker Secrets / Configs] -. runtime injection .-> API
+    SEC -. credentials .-> DB
+```
+
+> The diagram is a portfolio-level consolidation of the retained final-project artifacts. It does not imply that every service was highly available or production-grade.
+
+## Verified project capabilities
+
+| Area | Evidence retained | Status |
+|---|---|---|
+| Frontend containerization | Multi-stage Node build → Nginx runtime | **Verified** |
+| Backend containerization | Multi-stage Node build, Prisma artifacts, runtime entrypoint | **Verified** |
+| GitHub Actions | Frontend and backend image-build/publish workflows | **Verified** |
+| Container registry | GHCR used as the target registry | **Verified** |
+| Docker Swarm | 1 manager + 2 workers shown in project evidence | **Verified** |
+| Worker-only application placement | Project requirement explicitly prohibited manager workloads | **Verified requirement / documented deployment intent** |
+| Custom overlay network | `internal-net` / non-default overlay network | **Verified** |
+| Persistent state | PostgreSQL volume and Grafana volume | **Verified** |
+| Secret handling | External Docker Secrets for database credentials / URL | **Verified** |
+| Monitoring | Prometheus + Node Exporter + Grafana | **Verified** |
+| Backend scale-out | Application service configured with 3 replicas in retained final config | **Verified configuration** |
+| Firebase hosting | Earlier frontend CI/CD path preserved in personal history | **Verified earlier iteration** |
+
+## My verifiable contribution
+
+This was a collaborative team project, not a solo build. My GitHub history provides direct evidence of hands-on contribution to the frontend/DevOps track. In particular, commit `b35193d442a7f5dbd8b0a3c402213ce1f1ee24ed` in this repository is authored by `syifaniads` and introduced Docker configuration, a security-scanning setup, environment handling, and dependency changes. The repository also preserves my earlier branch/PR and Firebase CI/CD work.
+
+The final frontend history was later carried into the team organization. Multiple commits are shared by SHA between the personal repositories and `Final-Project-DevOps/devops-platform-frontend`, which gives the project a traceable provenance rather than a rewritten portfolio-only story.
+
+See [CONTRIBUTIONS.md](CONTRIBUTIONS.md) and [SOURCE_EVIDENCE.md](SOURCE_EVIDENCE.md).
+
+## Important engineering cleanup
+
+The historical project worked as coursework, but several artifacts were not ideal as a senior-reviewable reference. This portfolio therefore documents the gaps instead of hiding them:
+
+- the historical frontend GHCR workflow had an image-name composition issue (`ghcr.io` appeared in both registry and image name);
+- branch naming evolved (`main-clean`, `main`, `master`) across repositories;
+- the personal `docker-compose.yml` referenced an `api/` directory that is not present on the current default branch;
+- the original Swarm example used environment-variable defaults for database credentials, while the final report moved toward Docker Secrets;
+- monitoring was infrastructure-level and did not include a mature alerting/SLO stack;
+- PostgreSQL used a single stateful instance, so the application tier could scale while the database remained a single point of failure.
+
+Corrected **portfolio reference configurations** are provided under [`infra/`](infra/) and [`examples/ci/`](examples/ci/). These examples are clearly separated from historical evidence.
+
+## Repository map
+
+- [ARCHITECTURE.md](ARCHITECTURE.md) — deployment/control/data-plane architecture
+- [CI_CD.md](CI_CD.md) — original pipeline and corrected reference workflow
+- [DOCKER_SWARM.md](DOCKER_SWARM.md) — cluster, placement, networking, updates and persistence
+- [OBSERVABILITY.md](OBSERVABILITY.md) — Prometheus, Node Exporter and Grafana
+- [CONTRIBUTIONS.md](CONTRIBUTIONS.md) — team attribution and my direct evidence
+- [SOURCE_EVIDENCE.md](SOURCE_EVIDENCE.md) — original repos, commit lineage and report mapping
+- [SECURITY.md](SECURITY.md) — secret handling and public-repository policy
+- [RUNBOOK.md](RUNBOOK.md) — reproducible deployment/runbook outline
+- [LIMITATIONS.md](LIMITATIONS.md) — evidence and architecture limitations
+- [PORTFOLIO.md](PORTFOLIO.md) — CV/website-ready project copy
+- [docs/REPOSITORY_PROVENANCE.md](docs/REPOSITORY_PROVENANCE.md) — why multiple repos existed
+- [docs/PRODUCTION_HARDENING.md](docs/PRODUCTION_HARDENING.md) — what I would change for production
+
+## Original team source
+
+The final team implementation is preserved in the `Final-Project-DevOps` organization:
+
+- Frontend: https://github.com/Final-Project-DevOps/devops-platform-frontend
+- Backend: https://github.com/Final-Project-DevOps/devops-platform-backend
+- Infrastructure consolidation: https://github.com/Final-Project-DevOps/infrastructure
+
+The older personal repository `syifaniads/tes` is a duplicate/mirror lineage of the same frontend work and is **not** the canonical portfolio repository anymore.
+
+## Public repository policy
+
+No real GHCR tokens, Firebase tokens, database passwords, `.env` files, private keys, or historical deployment credentials should be committed here. Examples use placeholders or Docker Secrets. The original PDF report is not republished because portfolio evidence is better represented by source history and sanitized documentation.
