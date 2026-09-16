@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">KnowHub DevOps Platform architecture</title>
+  <desc id="desc">Developer to GitHub Actions and GHCR, then Docker Swarm manager and workers hosting frontend, API, PostgreSQL, Prometheus and Grafana.</desc>
+  <rect width="1200" height="420" fill="#0d1117"/>
+  <style>
+    .box{fill:#161b22;stroke:#58a6ff;stroke-width:2;rx:14}.work{fill:#161b22;stroke:#3fb950;stroke-width:2;rx:14}.data{fill:#161b22;stroke:#d29922;stroke-width:2;rx:14}.txt{fill:#f0f6fc;font:600 18px system-ui,-apple-system,Segoe UI,sans-serif}.sub{fill:#8b949e;font:14px system-ui,-apple-system,Segoe UI,sans-serif}.line{stroke:#8b949e;stroke-width:3;fill:none;marker-end:url(#a)}
+  </style>
+  <defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#8b949e"/></marker></defs>
+  <text x="40" y="42" class="txt">KnowHub — actual portfolio runtime & delivery path</text>
+  <text x="40" y="67" class="sub">Derived from .github/workflows, infra/docker-stack.yml, frontend/, backend/ and monitoring config</text>
+  <rect x="50" y="120" width="150" height="80" class="box"/><text x="90" y="155" class="txt">Developer</text><text x="76" y="180" class="sub">Git push / PR</text>
+  <rect x="250" y="120" width="170" height="80" class="box"/><text x="282" y="155" class="txt">GitHub Actions</text><text x="281" y="180" class="sub">build + publish</text>
+  <rect x="470" y="120" width="150" height="80" class="box"/><text x="518" y="155" class="txt">GHCR</text><text x="498" y="180" class="sub">container registry</text>
+  <rect x="670" y="120" width="170" height="80" class="box"/><text x="700" y="155" class="txt">Swarm Manager</text><text x="715" y="180" class="sub">control plane</text>
+  <rect x="900" y="95" width="240" height="130" class="work"/><text x="970" y="130" class="txt">Workers</text><text x="925" y="158" class="sub">React + Nginx</text><text x="925" y="182" class="sub">Express API ×3</text><text x="925" y="206" class="sub">Node Exporter</text>
+  <rect x="230" y="285" width="180" height="80" class="data"/><text x="266" y="320" class="txt">PostgreSQL</text><text x="267" y="344" class="sub">persistent state</text>
+  <rect x="500" y="285" width="180" height="80" class="data"/><text x="535" y="320" class="txt">Prometheus</text><text x="540" y="344" class="sub">host metrics</text>
+  <rect x="770" y="285" width="180" height="80" class="data"/><text x="817" y="320" class="txt">Grafana</text><text x="806" y="344" class="sub">dashboards</text>
+  <path d="M200 160 H250" class="line"/><path d="M420 160 H470" class="line"/><path d="M620 160 H670" class="line"/><path d="M840 160 H900" class="line"/>
+  <path d="M970 225 C900 260 450 250 350 285" class="line"/><path d="M1020 225 C980 260 650 250 590 285" class="line"/><path d="M680 325 H770" class="line"/>
+</svg>
