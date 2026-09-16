@@ -14,6 +14,27 @@
 ![Prometheus](https://img.shields.io/badge/Prometheus-Monitoring-E6522C?logo=prometheus&logoColor=white)
 ![Grafana](https://img.shields.io/badge/Grafana-Dashboards-F46800?logo=grafana&logoColor=white)
 
+<p align="center">
+  <img src="docs/assets/architecture.svg" alt="KnowHub implementation-derived DevOps architecture" width="1000" />
+</p>
+
+> **Visual provenance:** the diagram above is derived from the active repository artifacts (`.github/workflows/`, `infra/docker-stack.yml`, `frontend/`, `backend/`, and Prometheus configuration). It is an implementation map, not a fabricated production screenshot.
+
+## Senior technical review path
+
+A reviewer can validate the engineering story directly from the repository:
+
+| Question | Inspect |
+|---|---|
+| How are images built and published? | [`.github/workflows/publish-images.yml`](.github/workflows/publish-images.yml) |
+| How is local runtime composed? | [`infra/docker-compose.yml`](infra/docker-compose.yml) |
+| How is Swarm scheduling expressed? | [`infra/docker-stack.yml`](infra/docker-stack.yml) |
+| How are secrets handled? | [`infra/secrets/README.md`](infra/secrets/README.md) |
+| How is deployment validated? | [`infra/swarm/DEPLOYMENT.md`](infra/swarm/DEPLOYMENT.md) and [`RUNBOOK.md`](RUNBOOK.md) |
+| What is actually monitored? | [`OBSERVABILITY.md`](OBSERVABILITY.md) and [`infra/prometheus/prometheus.yml`](infra/prometheus/prometheus.yml) |
+| What would need hardening for production? | [`docs/PRODUCTION_HARDENING.md`](docs/PRODUCTION_HARDENING.md) and [`docs/TECHNICAL_DEBT.md`](docs/TECHNICAL_DEBT.md) |
+| What is historically verified vs reconstructed? | [`SOURCE_EVIDENCE.md`](SOURCE_EVIDENCE.md) and [`CONTRIBUTIONS.md`](CONTRIBUTIONS.md) |
+
 ## What is in this repository?
 
 This repository is the **canonical personal portfolio copy** of the KnowHub final project. It now contains the application and delivery stack together, so a reviewer does not need to jump between the historical frontend, backend, and infrastructure repositories.
