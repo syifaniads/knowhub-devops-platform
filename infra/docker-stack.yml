@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   frontend:
-    image: ${FRONTEND_IMAGE:-ghcr.io/syifaniads/react-firebase-devops/frontend:main}
+    image: ${FRONTEND_IMAGE:-ghcr.io/syifaniads/knowhub-devops-platform/frontend:main}
     ports:
       - "80:80"
     networks: [internal-net]
@@ -16,7 +16,7 @@ services:
         failure_action: rollback
 
   backend:
-    image: ${BACKEND_IMAGE:-ghcr.io/syifaniads/react-firebase-devops/backend:main}
+    image: ${BACKEND_IMAGE:-ghcr.io/syifaniads/knowhub-devops-platform/backend:main}
     entrypoint: ["/bin/sh", "-c", "export DATABASE_URL=$$(cat /run/secrets/db_url) && ./entrypoint.sh"]
     networks: [internal-net]
     secrets: [db_url]
